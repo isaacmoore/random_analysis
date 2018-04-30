@@ -1,0 +1,241 @@
+---
+title: "Impractical Jokers Analysis"
+author: Isaac Moore
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+setwd("~/github/random_analysis/Question 4")
+library(tidyverse)
+library(stringr)
+library(rvest)
+library(lubridate)
+```
+## Scrape Season table from wikipedia page
+```{r season 1}
+url <- "https://en.wikipedia.org/wiki/List_of_Impractical_Jokers_episodes"
+season_one <- url %>%
+  read_html() %>%
+  html_nodes(xpath='//*[@id="mw-content-text"]/div/table[2]') %>%
+  html_table()
+season_one <- season_one[[1]]
+season_one <- season_one[seq(1, nrow(season_one), 2), ]
+season_one <- season_one %>% mutate(season = 1)
+
+glimpse(season_one)
+
+```
+
+```{r season 2}
+season_two <- url %>%
+  read_html() %>%
+  html_nodes(xpath='//*[@id="mw-content-text"]/div/table[3]') %>%
+  html_table()
+season_two <- season_two[[1]]
+season_two <- season_two[seq(1, nrow(season_two), 2), ]
+season_two <- season_two %>% mutate(season = 2)
+
+glimpse(season_two)
+
+```
+
+```{r season 3}
+season_three <- url %>%
+  read_html() %>%
+  html_nodes(xpath='//*[@id="mw-content-text"]/div/table[4]') %>%
+  html_table()
+season_three <- season_three[[1]]
+season_three <- season_three[seq(1, nrow(season_three), 2), ]
+season_three <- season_three %>% mutate(season = 3)
+
+glimpse(season_three)
+
+```
+
+```{r season 4}
+season_four <- url %>%
+  read_html() %>%
+  html_nodes(xpath='//*[@id="mw-content-text"]/div/table[5]') %>%
+  html_table()
+season_four <- season_four[[1]]
+season_four <- season_four[seq(1, nrow(season_four), 2), ]
+season_four <- season_four %>% mutate(season = 4)
+
+glimpse(season_four)
+```
+
+```{r season 5}
+season_five <- url %>%
+  read_html() %>%
+  html_nodes(xpath='//*[@id="mw-content-text"]/div/table[6]') %>%
+  html_table()
+season_five <- season_five[[1]]
+season_five <- season_five[seq(1, nrow(season_five), 2), ]
+season_five <- season_five %>% mutate(season = 5)
+
+glimpse(season_five)
+```
+
+```{r season 6}
+season_six <- url %>%
+  read_html() %>%
+  html_nodes(xpath='//*[@id="mw-content-text"]/div/table[7]') %>%
+  html_table()
+season_six <- season_six[[1]]
+season_six <- season_six[seq(1, nrow(season_six), 2), ]
+season_six <- season_six %>% mutate(season = 6)
+
+glimpse(season_six)
+```
+
+```{r season 7}
+season_seven <- url %>%
+  read_html() %>%
+  html_nodes(xpath='//*[@id="mw-content-text"]/div/table[8]') %>%
+  html_table()
+season_seven <- season_seven[[1]]
+season_seven <- season_seven[seq(1, nrow(season_seven), 2), ]
+season_seven <- season_seven %>% mutate(season = 7)
+
+glimpse(season_seven)
+```
+
+```{r}
+ij <- (rbind(season_one, season_two, season_three, season_four, season_five, season_six, season_seven))
+names(ij) <- names(ij) %>% str_to_lower() %>% str_replace_all(" ", "_") %>% str_replace_all("\n", "")
+glimpse(ij)
+```
+
+```{r clean data types}
+ij$`losing_joker(s)` <- as.factor(ij$`losing_joker(s)`)
+
+# change to double
+ij$no.overall <- as.double(ij$no.overall)
+
+# change to double
+ij$no._inseason <- as.double(ij$no._inseason)
+
+# extract the actual number and not the reference 
+ij$`u.s._viewers(millions)` <- as.double(str_extract(ij$`u.s._viewers(millions)`, "\\d\\.\\d+"))
+
+# change the original_airdate from chr to date
+ij$original_airdate <- mdy(str_extract(ij$original_airdate, "\\w+\\s\\d+\\,\\s\\d+"))
+```
+
+
+```{r}
+glimpse(ij)
+```
+
+```{r export cleaned data}
+#write_csv(ij, path = "data/wiki_cleaned.csv")
+```
+
+
+```{r}
+ij %>% group_by(season) %>%  
+        summarise(season_views = sum(`u.s._viewers(millions)`)) %>% 
+        ggplot(aes(x = season, y = season_views)) + geom_bar(stat = "identity")
+```
+
+
+```{r}
+ij %>% group_by(season) %>% 
+        ggplot(aes(x = season, y = `u.s._viewers(millions)`, group = season)) + geom_boxplot()
+```
+
+
+```{r}
+ij %>% ggplot(aes(x = original_airdate, y = `u.s._viewers(millions)`)) + 
+        geom_point(aes(color = as.factor(season))) + 
+        geom_smooth(method = "lm", color = "black")
+```
+
+```{r}
+ij %>% filter(original_airdate > "2014-1-1" & original_airdate < "2015-1-1" & `u.s._viewers(millions)` > 1.5)
+```
+
+```{r}
+ij %>% filter(original_airdate > "2015-1-1" & `u.s._viewers(millions)` > 1.5)
+```
+
+
+
+```{r}
+table(ij$season)
+```
+
+
+```{r}
+ij %>% group_by(months(original_airdate)) %>% 
+        summarise(views_per_month = sum(`u.s._viewers(millions)`)) %>% 
+        arrange(desc(views_per_month))
+```
+
+```{r}
+ij %>% group_by(month(original_airdate)) %>% 
+        summarise(views_per_month = sum(`u.s._viewers(millions)`)) %>% 
+        arrange(`month(original_airdate)`) %>% 
+        ggplot(aes(x = `month(original_airdate)`, y = views_per_month)) +
+                geom_line()
+```
+
+```{r}
+ij %>% group_by(episode = no._inseason) %>% 
+        summarise(views_per_episode = sum(`u.s._viewers(millions)`)) %>% 
+        arrange(desc(views_per_episode))
+```
+
+```{r}
+ij %>% group_by(season, `losing_joker(s)`) %>% 
+        summarise(total_loss = n()) %>% 
+        ggplot(aes(x = `losing_joker(s)`, y = total_loss)) + 
+                geom_bar(stat = "identity") +
+                facet_grid(~ season )
+```
+super messy.
+
+### Total number of punishers, per joker including ties.
+```{r}
+ij %>% group_by(`losing_joker(s)`) %>% 
+        summarise(total_loss = n()) %>% 
+        arrange(desc(total_loss))
+```
+
+### Total number of punishment per joker 
+```{r}
+losing_jokers <- list(Joe = 0, Sal = 0, Q = 0, Murr = 0)
+for(i in ij$`losing_joker(s)`){
+        if(str_detect(str_to_lower(i), "joe")){
+                losing_jokers$Joe <- losing_jokers$Joe + 1
+        } 
+        if(str_detect(str_to_lower(i),"sal")){
+                losing_jokers$Sal <- losing_jokers$Sal + 1
+        }
+        if(str_detect(str_to_lower(i),"q")){
+                losing_jokers$Q <- losing_jokers$Q + 1
+        }
+        if(str_detect(str_to_lower(i),"murr")){
+                losing_jokers$Murr <- losing_jokers$Murr + 1
+        }
+        
+}
+losing_jokers <- tbl_df(stack(losing_jokers))
+losing_jokers
+```
+
+```{r}
+ggplot(losing_jokers, aes(y = values, x = ind)) + 
+        geom_bar(stat = "identity") + 
+        labs(x = "Joker", y = "n of punishments", title = "Overall Punishments")
+```
+
+
+```{r}
+
+```
+
+
+
