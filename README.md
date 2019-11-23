@@ -8,3 +8,4 @@ People ask random questions, I answer them.
 3 | Are there more biths in lower socioeconomic areas? | Sabrina | Collecting Data |
 4 | Which [Impractical Joker](http://www.trutv.com/shows/impractical-jokers/index.html) has the most punushments? | Family | Done. 
 5 | What is a fair price to purchase our car? | Isaac| Done.
+6 | What is the average IMDB score per year on the IMDB Top 250? | Isaac | Done.
